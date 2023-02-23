@@ -519,7 +519,7 @@ public final class MediaCodecInfo {
       return false;
     }
 
-    if (Util.SDK_INT >= 29) {
+    if (Util.SDK_INT >= 929) {//Some devices don’t report proper Capabilities, skip the check as is not needed.
       @PerformancePointCoverageResult
       int evaluation =
           Api29.areResolutionAndFrameRateCovered(
