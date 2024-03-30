@@ -49,7 +49,7 @@ public final class DefaultBandwidthMeter implements BandwidthMeter, TransferList
 
   /** Default initial Wifi bitrate estimate in bits per second. */
   public static final ImmutableList<Long> DEFAULT_INITIAL_BITRATE_ESTIMATES_WIFI =
-      ImmutableList.of(4_300_000L, 3_200_000L, 2_400_000L, 1_700_000L, 860_000L);
+      ImmutableList.of(60_200_000L, 30_900_000L, 20_300_000L, 10_300_000L, 1_620_000L);
 
   /** Default initial 2G bitrate estimates in bits per second. */
   public static final ImmutableList<Long> DEFAULT_INITIAL_BITRATE_ESTIMATES_2G =
