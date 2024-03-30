@@ -460,7 +460,7 @@ public final class HlsMediaPlaylist extends HlsPlaylist {
   public final int version;
 
   /** The target duration in microseconds, as defined by #EXT-X-TARGETDURATION. */
-  public final long targetDurationUs;
+  public long targetDurationUs;
 
   /**
    * The target duration for segment parts, as defined by #EXT-X-PART-INF, or {@link C#TIME_UNSET}
