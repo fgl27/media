@@ -114,6 +114,7 @@ public final class HlsMediaSource extends BaseMediaSource
     private LoadErrorHandlingPolicy loadErrorHandlingPolicy;
 
     private boolean allowChunklessPreparation;
+    private int LowLatency;
     private @MetadataType int metadataType;
     private boolean useSessionKeys;
     private long elapsedRealTimeOffsetMs;
@@ -281,6 +282,11 @@ public final class HlsMediaSource extends BaseMediaSource
       this.allowChunklessPreparation = allowChunklessPreparation;
       return this;
     }
+    
+    public Factory setLowLatency(int LowLatency) {
+      this.LowLatency = LowLatency;
+      return this;
+    }
 
     /**
      * Sets the type of metadata to extract from the HLS source (defaults to {@link
@@ -406,6 +412,7 @@ public final class HlsMediaSource extends BaseMediaSource
               hlsDataSourceFactory, loadErrorHandlingPolicy, playlistParserFactory),
           elapsedRealTimeOffsetMs,
           allowChunklessPreparation,
+          LowLatency,
           metadataType,
           useSessionKeys,
           timestampAdjusterInitializationTimeoutMs);
@@ -424,6 +431,7 @@ public final class HlsMediaSource extends BaseMediaSource
   private final DrmSessionManager drmSessionManager;
   private final LoadErrorHandlingPolicy loadErrorHandlingPolicy;
   private final boolean allowChunklessPreparation;
+  private final int LowLatency;
   private final @MetadataType int metadataType;
   private final boolean useSessionKeys;
   private final HlsPlaylistTracker playlistTracker;
@@ -447,6 +455,7 @@ public final class HlsMediaSource extends BaseMediaSource
       HlsPlaylistTracker playlistTracker,
       long elapsedRealTimeOffsetMs,
       boolean allowChunklessPreparation,
+      int LowLatency,
       @MetadataType int metadataType,
       boolean useSessionKeys,
       long timestampAdjusterInitializationTimeoutMs) {
@@ -461,6 +470,7 @@ public final class HlsMediaSource extends BaseMediaSource
     this.playlistTracker = playlistTracker;
     this.elapsedRealTimeOffsetMs = elapsedRealTimeOffsetMs;
     this.allowChunklessPreparation = allowChunklessPreparation;
+    this.LowLatency = LowLatency;
     this.metadataType = metadataType;
     this.useSessionKeys = useSessionKeys;
     this.timestampAdjusterInitializationTimeoutMs = timestampAdjusterInitializationTimeoutMs;
@@ -650,31 +660,24 @@ public final class HlsMediaSource extends BaseMediaSource
 
   private long getLiveWindowDefaultStartPositionUs(
       HlsMediaPlaylist playlist, long liveEdgeOffsetUs) {
-    long startPositionUs =
-        playlist.startOffsetUs != C.TIME_UNSET
-            ? playlist.startOffsetUs
-            : playlist.durationUs
-                + liveEdgeOffsetUs
-                - Util.msToUs(liveConfiguration.targetOffsetMs);
-    if (playlist.preciseStart) {
-      return startPositionUs;
-    }
-    @Nullable
-    HlsMediaPlaylist.Part part =
-        findClosestPrecedingIndependentPart(playlist.trailingParts, startPositionUs);
-    if (part != null) {
-      return part.relativeStartTimeUs;
-    }
+
     if (playlist.segments.isEmpty()) {
       return 0;
     }
-    HlsMediaPlaylist.Segment segment =
-        findClosestPrecedingSegment(playlist.segments, startPositionUs);
-    part = findClosestPrecedingIndependentPart(segment.parts, startPositionUs);
-    if (part != null) {
-      return part.relativeStartTimeUs;
-    }
-    return segment.relativeStartTimeUs;
+    
+    List<HlsMediaPlaylist.Segment> segments = playlist.segments;
+   
+    int defaultStartSegmentIndex = segments.size();
+    //Twitch segments targetDurationUs is not accurate, set the value to half of last segment to avoid re-buffers
+    playlist.targetDurationUs = segments.get(Math.max(0, defaultStartSegmentIndex - 1)).durationUs / 2;
+
+    //If LowLatency enable start from #2 segment (from #1 segment may cause rebuffer) else on half of segments
+    defaultStartSegmentIndex = Math.max(
+        0,
+        LowLatency > 0 ? (defaultStartSegmentIndex - LowLatency) : (defaultStartSegmentIndex - (defaultStartSegmentIndex / 2))
+    );
+
+    return segments.get(defaultStartSegmentIndex).relativeStartTimeUs;
   }
 
   private void updateLiveConfiguration(HlsMediaPlaylist playlist, long targetLiveOffsetUs) {
