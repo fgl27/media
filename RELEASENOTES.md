@@ -2,6 +2,93 @@
 
 ## 1.3
 
+### 1.3.1 (2024-04-11)
+
+This release includes the following changes since the
+[1.3.0 release](#130-2024-03-06):
+
+*   Common Library:
+    *   Add `Format.labels` to allow localized or other alternative labels.
+*   ExoPlayer:
+    *   Fix issue where `PreloadMediaPeriod` cannot retain the streams when it
+        is preloaded again.
+    *   Apply the correct corresponding `TrackSelectionResult` to the playing
+        period in track reselection.
+    *   Start early-enabled renderers only after advancing the playing period
+        when transitioning between media items
+        ([#1017](https://github.com/androidx/media/issues/1017)).
+    *   Add missing return type to proguard `-keepclasseswithmembers` rule for
+        `DefaultVideoFrameProcessor.Factory.Builder.build()`
+        ([#1187](https://github.com/androidx/media/issues/1187)).
+*   Transformer:
+    *   Add workaround for exception thrown due to `MediaMuxer` not supporting
+        negative presentation timestamps before API 30.
+*   Track Selection:
+    *   `DefaultTrackSelector`: Prefer video tracks with a 'reasonable' frame
+        rate (>=10fps) over those with a lower or unset frame rate. This ensures
+        the player selects the 'real' video track in MP4s extracted from motion
+        photos that can contain two HEVC tracks where one has a higher
+        resolution but a very small number of frames
+        ([#1051](https://github.com/androidx/media/issues/1051)).
+*   Extractors:
+    *   Fix issue where padding was not skipped when reading odd-sized chunks
+        from WAV files ([#1117](https://github.com/androidx/media/pull/1117)).
+    *   MP3: Populate `Format.averageBitrate` from metadata frames such as
+        `XING` and `VBRI`.
+    *   MPEG-TS: Revert a change that aimed to ensure the last frame is rendered
+        by passing the last access unit of a stream to the sample queue
+        ([#7909](https://github.com/google/ExoPlayer/issues/7909)). This is due
+        to the change causing new problems with I-frame only HLS streams
+        ([#1150](https://github.com/google/ExoPlayer/issues/1150)) and H.262 HLS
+        streams ([#1126](https://github.com/google/ExoPlayer/issues/1126)).
+*   Audio:
+    *   Allow renderer recovery by disabling offload if audio track fails to
+        initialize in offload mode.
+*   Video:
+    *   Add workaround for a device issue on Galaxy Tab S7 FE, Chromecast with
+        Google TV, and Lenovo M10 FHD Plus that causes 60fps H265 streams to be
+        marked as unsupported
+    *   Add workaround that ensures the first frame is always rendered while
+        tunneling even if the device does not do this automatically as required
+        by the API ([#1169](https://github.com/androidx/media/issues/1169)).
+        ([#966](https://github.com/androidx/media/issues/966)).
+    *   Fix issue where HDR color info handling causes codec misbehavior and
+        prevents adaptive format switches for SDR video tracks
+        ([#1158](https://github.com/androidx/media/issues/1158)).
+*   Text:
+    *   WebVTT: Prevent directly consecutive cues from creating spurious
+        additional `CuesWithTiming` instances from `WebvttParser.parse`
+        ([#1177](https://github.com/androidx/media/issues/1177)).
+*   DRM:
+    *   Work around a `NoSuchMethodError` which can be thrown by the `MediaDrm`
+        framework instead of `ResourceBusyException` or
+        `NotProvisionedException` on some Android 14 devices
+        ([#1145](https://github.com/androidx/media/issues/1145)).
+*   Effect:
+    *   Improved PQ to SDR tone-mapping by converting color spaces.
+*   Session:
+    *   Fix issue where the current position jumps back when the controller
+        replaces the current item
+        ([#951](https://github.com/androidx/media/issues/951)).
+    *   Fix issue where `MediaMetadata` with just non-null `extras` is not
+        transmitted between media controllers and sessions
+        ([#1176](https://github.com/androidx/media/issues/1176)).
+*   UI:
+    *   Fallback to include audio track language name if `Locale` cannot
+        identify a display name
+        ([#988](https://github.com/androidx/media/issues/988)).
+*   DASH Extension:
+    *   Populate all `Label` elements from the manifest into `Format.labels`
+        ([#1054](https://github.com/androidx/media/pull/1054)).
+*   RTSP Extension:
+    *   Skip empty session information values (i-tags) in SDP parsing
+        ([#1087](https://github.com/androidx/media/issues/1087)).
+*   Decoder Extensions (FFmpeg, VP9, AV1, MIDI, etc.):
+    *   Disable the MIDI extension as a local dependency by default because it
+        requires an additional Maven repository to be configured. Users who need
+        this module from a local dependency
+        [can re-enable it](https://github.com/androidx/media/blob/main/README.md#midi-module).
+
 ### 1.3.0 (2024-03-06)
 
 This release includes the following changes since the

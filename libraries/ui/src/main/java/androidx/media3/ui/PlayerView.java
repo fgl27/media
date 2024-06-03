@@ -951,7 +951,7 @@ public class PlayerView extends FrameLayout implements AdViewProvider {
   }
 
   /**
-   * Sets the {@link PlayerControlView.VisibilityListener}.
+   * Sets the {@link ControllerVisibilityListener}.
    *
    * <p>If {@code listener} is non-null then any listener set by {@link
    * #setControllerVisibilityListener(PlayerControlView.VisibilityListener)} is removed.
@@ -965,6 +965,16 @@ public class PlayerView extends FrameLayout implements AdViewProvider {
     if (listener != null) {
       setControllerVisibilityListener((PlayerControlView.VisibilityListener) null);
     }
+  }
+
+  /**
+   * Sets whether {@linkplain PlayerControlView#isAnimationEnabled() controller animation is
+   * enabled}.
+   */
+  @UnstableApi
+  public void setControllerAnimationEnabled(boolean animationEnabled) {
+    Assertions.checkStateNotNull(controller);
+    controller.setAnimationEnabled(animationEnabled);
   }
 
   /**

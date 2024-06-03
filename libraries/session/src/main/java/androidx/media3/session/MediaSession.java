@@ -34,8 +34,10 @@ import android.os.RemoteException;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.view.KeyEvent;
+import androidx.annotation.DoNotInline;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import androidx.media.MediaSessionManager.RemoteUserInfo;
@@ -728,6 +730,9 @@ public class MediaSession {
    */
   @UnstableApi
   public final void setSessionActivity(PendingIntent activityPendingIntent) {
+    if (Util.SDK_INT >= 31) {
+      checkArgument(Api31.isActivity(activityPendingIntent));
+    }
     impl.setSessionActivity(activityPendingIntent);
   }
 
@@ -1362,7 +1367,7 @@ public class MediaSession {
      *   <li>{@link MediaControllerCompat.TransportControls#playFromMediaId playFromMediaId}
      *   <li>{@link MediaControllerCompat.TransportControls#prepareFromSearch prepareFromSearch}
      *   <li>{@link MediaControllerCompat.TransportControls#playFromSearch playFromSearch}
-     *   <li>{@link MediaControllerCompat.TransportControls#addQueueItem addQueueItem}
+     *   <li>{@link MediaControllerCompat#addQueueItem addQueueItem}
      * </ul>
      *
      * The values of {@link MediaItem#mediaId}, {@link MediaItem.RequestMetadata#mediaUri}, {@link
@@ -1428,7 +1433,7 @@ public class MediaSession {
      *   <li>{@link MediaControllerCompat.TransportControls#playFromMediaId playFromMediaId}
      *   <li>{@link MediaControllerCompat.TransportControls#prepareFromSearch prepareFromSearch}
      *   <li>{@link MediaControllerCompat.TransportControls#playFromSearch playFromSearch}
-     *   <li>{@link MediaControllerCompat.TransportControls#addQueueItem addQueueItem}
+     *   <li>{@link MediaControllerCompat#addQueueItem addQueueItem}
      * </ul>
      *
      * The values of {@link MediaItem#mediaId}, {@link MediaItem.RequestMetadata#mediaUri}, {@link
@@ -1943,6 +1948,9 @@ public class MediaSession {
 
     @SuppressWarnings("unchecked")
     public BuilderT setSessionActivity(PendingIntent pendingIntent) {
+      if (Util.SDK_INT >= 31) {
+        checkArgument(Api31.isActivity(pendingIntent));
+      }
       sessionActivity = checkNotNull(pendingIntent);
       return (BuilderT) this;
     }
@@ -1997,5 +2005,13 @@ public class MediaSession {
     }
 
     public abstract SessionT build();
+  }
+
+  @RequiresApi(31)
+  private static final class Api31 {
+    @DoNotInline
+    public static boolean isActivity(PendingIntent pendingIntent) {
+      return pendingIntent.isActivity();
+    }
   }
 }

@@ -191,7 +191,7 @@ public class MediaCodecAudioRenderer extends MediaCodecRenderer implements Media
       AudioSink audioSink) {
     this(
         context,
-        MediaCodecAdapter.Factory.DEFAULT,
+        MediaCodecAdapter.Factory.getDefault(context),
         mediaCodecSelector,
         /* enableDecoderFallback= */ false,
         eventHandler,
@@ -219,7 +219,7 @@ public class MediaCodecAudioRenderer extends MediaCodecRenderer implements Media
       AudioSink audioSink) {
     this(
         context,
-        MediaCodecAdapter.Factory.DEFAULT,
+        MediaCodecAdapter.Factory.getDefault(context),
         mediaCodecSelector,
         enableDecoderFallback,
         eventHandler,
@@ -552,6 +552,7 @@ public class MediaCodecAudioRenderer extends MediaCodecRenderer implements Media
               .setMetadata(format.metadata)
               .setId(format.id)
               .setLabel(format.label)
+              .setLabels(format.labels)
               .setLanguage(format.language)
               .setSelectionFlags(format.selectionFlags)
               .setRoleFlags(format.roleFlags)
@@ -743,7 +744,13 @@ public class MediaCodecAudioRenderer extends MediaCodecRenderer implements Media
       fullyConsumed = audioSink.handleBuffer(buffer, bufferPresentationTimeUs, sampleCount);
     } catch (InitializationException e) {
       throw createRendererException(
-          e, inputFormat, e.isRecoverable, PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED);
+          e,
+          inputFormat,
+          e.isRecoverable,
+          isBypassEnabled()
+                  && getConfiguration().offloadModePreferred != AudioSink.OFFLOAD_MODE_DISABLED
+              ? PlaybackException.ERROR_CODE_AUDIO_TRACK_OFFLOAD_INIT_FAILED
+              : PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED);
     } catch (WriteException e) {
       throw createRendererException(
           e,
