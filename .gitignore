@@ -59,8 +59,9 @@ extensions/vp9/src/main/jni/libvpx_android_configs
 extensions/vp9/src/main/jni/libyuv
 
 # AV1 extension
-extensions/av1/src/main/jni/cpu_features
-extensions/av1/src/main/jni/libgav1
+libraries/decoder_av1/src/main/jni/cpu_features
+libraries/decoder_av1/src/main/jni/libgav1
+libraries/decoder_av1/.cxx
 
 # Opus extension
 extensions/opus/src/main/jni/libopus
