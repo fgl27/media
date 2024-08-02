@@ -660,8 +660,7 @@ public final class HlsMediaSource extends BaseMediaSource
         : 0;
   }
 
-  private long getLiveWindowDefaultStartPositionUs(
-      HlsMediaPlaylist playlist, long liveEdgeOffsetUs) {
+  private long getLiveWindowDefaultStartPositionUs(HlsMediaPlaylist playlist, long liveEdgeOffsetUs) {
 
     if (playlist.segments.isEmpty()) {
       return 0;
@@ -676,24 +675,30 @@ public final class HlsMediaSource extends BaseMediaSource
     //If LowLatency enable start from #2 segment (from #1 segment may cause rebuffer) else on half of segments
     defaultStartSegmentIndex = Math.max(
         0,
-        LowLatency > 0 ? (defaultStartSegmentIndex - LowLatency) : (defaultStartSegmentIndex - (defaultStartSegmentIndex / 2))
+        LowLatency > 0 ? (defaultStartSegmentIndex - LowLatency) : (defaultStartSegmentIndex / 2)
     );
 
     return segments.get(defaultStartSegmentIndex).relativeStartTimeUs;
   }
 
   private void updateLiveConfiguration(HlsMediaPlaylist playlist, long targetLiveOffsetUs) {
-    MediaItem.LiveConfiguration mediaItemLiveConfiguration = getMediaItem().liveConfiguration;
-    boolean disableSpeedAdjustment =
-        mediaItemLiveConfiguration.minPlaybackSpeed == C.RATE_UNSET
-            && mediaItemLiveConfiguration.maxPlaybackSpeed == C.RATE_UNSET
-            && playlist.serverControl.holdBackUs == C.TIME_UNSET
-            && playlist.serverControl.partHoldBackUs == C.TIME_UNSET;
+    List<HlsMediaPlaylist.Segment> segments = playlist.segments;
+    int segmentLen = segments.size();
+    long lowestTargetMs = Util.usToMs(segments.get(Math.max(0, segmentLen - 1)).durationUs);
+
+    long targetMs = lowestTargetMs * (segmentLen / 2);
+    
+    if (LowLatency == 1) {
+    	targetMs = lowestTargetMs + 250;//lowest then this and we get too much rebuffers
+    } else if (LowLatency == 2) {
+    	targetMs = lowestTargetMs * 2;
+    }
+    
     liveConfiguration =
         new LiveConfiguration.Builder()
-            .setTargetOffsetMs(Util.usToMs(targetLiveOffsetUs))
-            .setMinPlaybackSpeed(disableSpeedAdjustment ? 1f : liveConfiguration.minPlaybackSpeed)
-            .setMaxPlaybackSpeed(disableSpeedAdjustment ? 1f : liveConfiguration.maxPlaybackSpeed)
+            .setTargetOffsetMs(targetMs)
+            .setMinPlaybackSpeed(0.99f)
+            .setMaxPlaybackSpeed(1.01f)
             .build();
   }
 
