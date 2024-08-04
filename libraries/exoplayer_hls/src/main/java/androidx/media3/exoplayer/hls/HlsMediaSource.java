@@ -115,6 +115,7 @@ public final class HlsMediaSource extends BaseMediaSource
 
     private boolean allowChunklessPreparation;
     private int LowLatency;
+    private boolean speedAdjustment;
     private @MetadataType int metadataType;
     private boolean useSessionKeys;
     private long elapsedRealTimeOffsetMs;
@@ -289,6 +290,11 @@ public final class HlsMediaSource extends BaseMediaSource
       this.LowLatency = LowLatency;
       return this;
     }
+    
+    public Factory setspeedAdjustment(boolean speedAdjustment) {
+      this.speedAdjustment = speedAdjustment;
+      return this;
+    }
 
     /**
      * Sets the type of metadata to extract from the HLS source (defaults to {@link
@@ -415,6 +421,7 @@ public final class HlsMediaSource extends BaseMediaSource
           elapsedRealTimeOffsetMs,
           allowChunklessPreparation,
           LowLatency,
+          speedAdjustment,
           metadataType,
           useSessionKeys,
           timestampAdjusterInitializationTimeoutMs);
@@ -434,6 +441,7 @@ public final class HlsMediaSource extends BaseMediaSource
   private final LoadErrorHandlingPolicy loadErrorHandlingPolicy;
   private final boolean allowChunklessPreparation;
   private final int LowLatency;
+  private final boolean speedAdjustment;
   private final @MetadataType int metadataType;
   private final boolean useSessionKeys;
   private final HlsPlaylistTracker playlistTracker;
@@ -458,6 +466,7 @@ public final class HlsMediaSource extends BaseMediaSource
       long elapsedRealTimeOffsetMs,
       boolean allowChunklessPreparation,
       int LowLatency,
+      boolean speedAdjustment,
       @MetadataType int metadataType,
       boolean useSessionKeys,
       long timestampAdjusterInitializationTimeoutMs) {
@@ -473,6 +482,7 @@ public final class HlsMediaSource extends BaseMediaSource
     this.elapsedRealTimeOffsetMs = elapsedRealTimeOffsetMs;
     this.allowChunklessPreparation = allowChunklessPreparation;
     this.LowLatency = LowLatency;
+    this.speedAdjustment = speedAdjustment;
     this.metadataType = metadataType;
     this.useSessionKeys = useSessionKeys;
     this.timestampAdjusterInitializationTimeoutMs = timestampAdjusterInitializationTimeoutMs;
@@ -697,8 +707,8 @@ public final class HlsMediaSource extends BaseMediaSource
     liveConfiguration =
         new LiveConfiguration.Builder()
             .setTargetOffsetMs(targetMs)
-            .setMinPlaybackSpeed(0.99f)
-            .setMaxPlaybackSpeed(1.01f)
+            .setMinPlaybackSpeed(speedAdjustment && LowLatency > 0 ? 0.99f : 1f)
+            .setMaxPlaybackSpeed(speedAdjustment && LowLatency > 0 ? 1.01f : 1f)
             .build();
   }
 
